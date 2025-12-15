@@ -86,7 +86,17 @@ export const createProduct = async (data: ProductRequest): Promise<Product | und
 // Cập nhật sản phẩm (Admin)
 export const updateProduct = async (id: number, data: ProductRequest): Promise<Product | undefined> => {
   try {
-    const res = await api.put(`/api/products/${id}`, data);
+    // Chỉ gửi các field hợp lệ
+    const payload: ProductRequest = {
+      name: data.name,
+      description: data.description,
+      price: data.price,
+      instock: data.instock,
+      imageUrl: data.imageUrl,
+      categoryId: data.categoryId
+    };
+
+    const res = await api.put(`/api/products/${id}`, payload);
     toast.success("Cập nhật sản phẩm thành công");
     return res.data;
   } catch (error) {

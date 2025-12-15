@@ -39,13 +39,15 @@ export default function CategoriesPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Bạn có chắc muốn xóa danh mục này?")) return;
+
     try {
       await deleteCategory(id);
       fetchCategories();
-    } catch (error) {
-      console.error(error);
+    } catch {
+
     }
   };
+
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);

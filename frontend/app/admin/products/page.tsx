@@ -13,6 +13,8 @@ import {
   Upload,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import type { UploadFile } from "antd/es/upload/interface";
+
 import {
   getAll,
   createProduct,
@@ -33,9 +35,14 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFileList, setImageFileList] = useState<UploadFile[]>([]);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const [form] = Form.useForm();
 
+  // =========================
+  // Fetch data
+  // =========================
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -49,7 +56,7 @@ export default function ProductsPage() {
   const fetchCategories = async () => {
     try {
       const data = await getAllCategories();
-      setCategories(data);
+      if (data) setCategories(data);
     } catch (error) {
       console.error(error);
     }
@@ -60,38 +67,52 @@ export default function ProductsPage() {
     fetchCategories();
   }, []);
 
+  // =========================
+  // Handlers
+  // =========================
   const handleDelete = async (id: number) => {
     if (!confirm("Bạn có chắc muốn xóa sản phẩm này?")) return;
     await deleteProduct(id);
     fetchProducts();
   };
 
-  const handleEdit = (product: Product) => {
+  const openModalForEdit = (product: Product) => {
     setEditingProduct(product);
+    setRemoveImage(false);
+
     form.setFieldsValue({
       name: product.name,
       description: product.description,
       price: product.price,
       instock: product.instock,
       categoryId: product.categoryId,
-      imageUrl: product.imageUrl,
     });
+
+    setImageFileList(
+      product.imageUrl
+        ? [{ uid: "-1", name: "current-image.jpg", status: "done", url: product.imageUrl }]
+        : []
+    );
+    setImageFile(null);
     setModalOpen(true);
   };
 
-  const handleAdd = () => {
+  const openModalForAdd = () => {
     setEditingProduct(null);
+    setRemoveImage(false);
     form.resetFields();
+    setImageFileList([{ uid: "-1", name: "no_image.png", status: "done", url: "/no_image.png" }]);
+    setImageFile(null);
     setModalOpen(true);
   };
 
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      let imageUrl = values.imageUrl;
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
-      }
+      let imageUrl: string | null = editingProduct?.imageUrl ?? null;
+
+      if (!editingProduct || removeImage) imageUrl = null;
+      if (imageFile) imageUrl = await uploadImage(imageFile);
 
       const data: ProductRequest = {
         name: values.name,
@@ -102,14 +123,12 @@ export default function ProductsPage() {
         imageUrl,
       };
 
-      if (editingProduct) {
-        await updateProduct(editingProduct.id, data);
-      } else {
-        await createProduct(data);
-      }
+      if (editingProduct) await updateProduct(editingProduct.id, data);
+      else await createProduct(data);
 
       setModalOpen(false);
       setImageFile(null);
+      setImageFileList([]);
       fetchProducts();
     } catch (error) {
       console.error(error);
@@ -123,39 +142,40 @@ export default function ProductsPage() {
     fetchProducts();
   };
 
+  // =========================
+  // Table columns
+  // =========================
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
     { title: "Tên sản phẩm", dataIndex: "name", key: "name" },
-    { title: "Mô tả", dataIndex: "description", key: "description" },
-    { title: "Giá", dataIndex: "price", key: "price" },
+    { title: "Mô tả", dataIndex: "description", key: "description", ellipsis: true },
+    { title: "Giá", dataIndex: "price", key: "price", render: (val: number) => val.toLocaleString("vi-VN") },
     { title: "Tồn kho", dataIndex: "instock", key: "instock" },
     {
       title: "Danh mục",
       key: "category",
-      render: (_: any, record: Product) => record.category?.name || "",
+      render: (_: any, record: Product) => record.category?.name || "N/A",
     },
     {
       title: "Ảnh",
       key: "image",
-      render: (_: any, record: Product) =>
-        record.imageUrl ? (
-          <img src={record.imageUrl} alt="" style={{ width: 60 }} />
-        ) : null,
+      render: (_: any, record: Product) => (
+        <img
+          src={record.imageUrl || "/no_image.png"}
+          alt={record.name}
+          style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 4 }}
+        />
+      ),
     },
     {
       title: "Actions",
       key: "actions",
       render: (_: any, record: Product) => (
         <Space>
-          <Button type="primary" size="small" onClick={() => handleEdit(record)}>
+          <Button type="primary" size="small" onClick={() => openModalForEdit(record)}>
             Edit
           </Button>
-          <Button
-            type="primary"
-            danger
-            size="small"
-            onClick={() => handleDelete(record.id)}
-          >
+          <Button type="primary" danger size="small" onClick={() => handleDelete(record.id)}>
             Delete
           </Button>
         </Space>
@@ -164,11 +184,11 @@ export default function ProductsPage() {
   ];
 
   return (
-    <div>
+    <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Quản lý sản phẩm</h1>
 
       <Space className="mb-4">
-        <Button type="primary" onClick={handleAdd}>
+        <Button type="primary" onClick={openModalForAdd}>
           Thêm sản phẩm
         </Button>
 
@@ -183,22 +203,12 @@ export default function ProductsPage() {
           <Button icon={<UploadOutlined />}>Upload Excel</Button>
         </Upload>
 
-        <Button
-          type="primary"
-          onClick={handleUploadExcel}
-          disabled={!excelFile}
-        >
+        <Button type="primary" onClick={handleUploadExcel} disabled={!excelFile}>
           Xử lý Excel
         </Button>
       </Space>
 
-      <Table
-        rowKey="id"
-        dataSource={products}
-        columns={columns}
-        loading={loading}
-        bordered
-      />
+      <Table rowKey="id" dataSource={products} columns={columns} loading={loading} bordered />
 
       <Modal
         title={editingProduct ? "Sửa sản phẩm" : "Thêm sản phẩm"}
@@ -209,49 +219,36 @@ export default function ProductsPage() {
         cancelText="Hủy"
       >
         <Form form={form} layout="vertical">
-          <Form.Item
-            label="Tên sản phẩm"
-            name="name"
-            rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm" }]}
-          >
+          <Form.Item label="Tên sản phẩm" name="name" rules={[{ required: true, message: "Nhập tên sản phẩm" }]}>
             <Input />
           </Form.Item>
+
           <Form.Item label="Mô tả" name="description">
-            <Input.TextArea />
+            <Input.TextArea rows={3} />
           </Form.Item>
-          <Form.Item
-            label="Giá"
-            name="price"
-            rules={[{ required: true, message: "Nhập giá sản phẩm" }]}
-          >
+
+          <Form.Item label="Giá" name="price" rules={[{ required: true, message: "Nhập giá sản phẩm" }]}>
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item
-            label="Tồn kho"
-            name="instock"
-            rules={[{ required: true, message: "Nhập tồn kho" }]}
-          >
+
+          <Form.Item label="Tồn kho" name="instock" rules={[{ required: true, message: "Nhập tồn kho" }]}>
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item
-            label="Danh mục"
-            name="categoryId"
-            rules={[{ required: true, message: "Chọn danh mục" }]}
-          >
-            <Select
-              options={categories.map((c) => ({
-                label: c.name,
-                value: c.id,
-              }))}
-            />
+
+          <Form.Item label="Danh mục" name="categoryId" rules={[{ required: true, message: "Chọn danh mục" }]}>
+            <Select options={categories.map(c => ({ label: c.name, value: c.id }))} />
           </Form.Item>
+
           <Form.Item label="Ảnh sản phẩm">
             <Upload
-              beforeUpload={(file) => {
-                setImageFile(file);
-                return false;
+              fileList={imageFileList}
+              maxCount={1}
+              beforeUpload={() => false}
+              onChange={({ fileList }) => {
+                setImageFileList(fileList);
+                if (fileList.length === 0) setRemoveImage(true), setImageFile(null);
+                else setRemoveImage(false), setImageFile(fileList[0].originFileObj || null);
               }}
-              showUploadList={{ showRemoveIcon: true }}
             >
               <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
             </Upload>

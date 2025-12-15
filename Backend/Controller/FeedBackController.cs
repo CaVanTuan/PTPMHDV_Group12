@@ -8,7 +8,7 @@ namespace Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Bắt buộc login
+
     public class FeedbackController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -43,41 +43,55 @@ namespace Controllers
             return Ok(feedbacks);
         }
 
-        // GET: api/Feedback/product/5
         [HttpGet("product/{productId}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetByProduct(int productId)
         {
-            var (userId, role) = GetUserInfo();
-
-            IQueryable<Feedback> query = _context.Feedbacks
+            var feedbacks = await _context.Feedbacks
                 .Where(f => f.ProductId == productId)
-                .Include(f => f.User);
+                .Include(f => f.User)
+                .Select(f => new
+                {
+                    f.Id,
+                    f.Content,
+                    f.Rating,
+                    f.ProductId,
+                    f.UserId,
+                    UserName = f.User.FullName
+                })
+                .ToListAsync();
 
-            if (role != "Admin")
-                query = query.Where(f => f.UserId == userId);
-
-            var feedbacks = await query.ToListAsync();
             return Ok(feedbacks);
         }
 
         // POST: api/Feedback
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Feedback feedback)
+        [Authorize]
+        public async Task<IActionResult> Create([FromBody] CreateFeedbackDto dto)
         {
             var (userId, role) = GetUserInfo();
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // User chỉ được tạo feedback cho chính mình
-            feedback.UserId = userId;
+            var feedback = new Feedback
+            {
+                Content = dto.Content,
+                Rating = dto.Rating,
+                ProductId = dto.ProductId,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow
+            };
+
             _context.Feedbacks.Add(feedback);
             await _context.SaveChangesAsync();
+
             return Ok(feedback);
         }
 
         // PUT: api/Feedback/5
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Update(int id, [FromBody] Feedback feedback)
         {
             var (userId, role) = GetUserInfo();
@@ -101,6 +115,7 @@ namespace Controllers
 
         // DELETE: api/Feedback/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             var (userId, role) = GetUserInfo();
@@ -117,5 +132,13 @@ namespace Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Feedback deleted successfully" });
         }
+    }
+    public class CreateFeedbackDto
+    {
+        public string Content { get; set; }
+
+        public int Rating { get; set; }
+
+        public int ProductId { get; set; }
     }
 }

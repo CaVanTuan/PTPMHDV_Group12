@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251213083540_Sua DB")]
-    partial class SuaDB
+    [Migration("20251215161145_Them DBDBBDB")]
+    partial class ThemDBDBBDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -294,6 +294,9 @@ namespace Backend.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PromotionId"));
+
+                    b.Property<int>("ApplyType")
+                        .HasColumnType("int");
 
                     b.Property<string>("Code")
                         .IsRequired()

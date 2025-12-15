@@ -83,19 +83,26 @@ namespace Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var category = await _context.categories.FirstOrDefaultAsync(q => q.Id == id);
+            var category = await _context.categories
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (category == null)
-                return NotFound();
+                return NotFound(new { message = "Danh mục không tồn tại." });
+
+            var hasProduct = await _context.products
+                .AnyAsync(p => p.CategoryId == id);
+
+            if (hasProduct)
+                return BadRequest(new
+                {
+                    message = "Danh mục đang có sản phẩm, không thể xóa."
+                });
 
             _context.categories.Remove(category);
             await _context.SaveChangesAsync();
 
-            return Ok(
-                new { message = "Xóa Category thành công." }
-            );
+            return Ok(new { message = "Xóa Category thành công." });
         }
-
     }
 
     public class CategoryRequest

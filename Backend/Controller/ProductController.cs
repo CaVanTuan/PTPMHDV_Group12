@@ -151,13 +151,15 @@ namespace Controllers
         //Cập nhật sản phẩm (Admin)
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(int id, [FromBody] Product request)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var product = await _context.products.FirstOrDefaultAsync(p => p.Id == id);
             if (product == null)
                 return NotFound();
 
-            // Nếu muốn kiểm tra lại CategoryId
             var category = await _context.categories.FindAsync(request.CategoryId);
             if (category == null)
                 return BadRequest("CategoryId không hợp lệ!");
@@ -170,6 +172,7 @@ namespace Controllers
             product.CategoryId = request.CategoryId;
 
             await _context.SaveChangesAsync();
+
             product.Category = category;
             return Ok(product);
         }
@@ -207,15 +210,24 @@ namespace Controllers
 
             return Ok(products);
         }
-
-        public class CreateProductRequest
-        {
-            public string Name { get; set; }
-            public string Description { get; set; }
-            public decimal Price { get; set; }
-            public int Instock { get; set; }
-            public string ImageUrl { get; set; }
-            public int CategoryId { get; set; }
-        }
     }
+    public class CreateProductRequest
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public decimal Price { get; set; }
+        public int Instock { get; set; }
+        public string? ImageUrl { get; set; }
+        public int CategoryId { get; set; }
+    }
+    public class UpdateProductRequest
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public decimal Price { get; set; }
+        public int Instock { get; set; }
+        public string? ImageUrl { get; set; }
+        public int CategoryId { get; set; }
+    }
+
 }

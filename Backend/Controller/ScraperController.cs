@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Newtonsoft.Json.Linq;
-using System.Net.Http;
 using HtmlAgilityPack;
+using System.Text.RegularExpressions;
 
 namespace Controllers
 {
@@ -13,22 +13,27 @@ namespace Controllers
     {
         private readonly AppDbContext _context;
         private readonly HttpClient _httpClient;
+        private static readonly Random _random = new Random();
 
         public ScraperController(AppDbContext context)
         {
             _context = context;
-            _httpClient = new HttpClient();
 
-            // Thêm header để tránh 403
-            _httpClient.DefaultRequestHeaders.Add("User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            _httpClient = new HttpClient();
+            _httpClient.DefaultRequestHeaders.Add(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            );
             _httpClient.DefaultRequestHeaders.Add("Referer", "https://yame.vn");
         }
 
+        // ================================
+        // FETCH PRODUCTS FROM YAME
+        // ================================
         [HttpGet("fetch-products")]
         public async Task<IActionResult> FetchProducts()
         {
-            string url = "https://yame.vn/products.json";
+            const string url = "https://yame.vn/products.json";
 
             try
             {
@@ -40,65 +45,125 @@ namespace Controllers
                 var json = JObject.Parse(content);
                 var productsArray = json["products"] as JArray;
 
-                if (productsArray == null)
-                    return BadRequest("No products found in JSON");
+                if (productsArray == null || !productsArray.Any())
+                    return BadRequest("No products found");
+
+                // Load sẵn data để tránh query nhiều lần
+                var existingCategories = await _context.categories.ToListAsync();
+                var existingProductNames = new HashSet<string>(
+                    await _context.products.Select(p => p.Name).ToListAsync()
+                );
+
+                var newProducts = new List<Product>();
 
                 foreach (var item in productsArray)
                 {
-                    // Lấy category từ product_type
-                    string categoryName = item["product_type"]?.ToString() ?? "Khác";
+                    // ================================
+                    // CATEGORY
+                    // ================================
+                    string categoryName = item["product_type"]?.ToString()?.Trim();
+                    if (string.IsNullOrEmpty(categoryName))
+                        categoryName = "Khác";
 
-                    // Check xem category đã tồn tại chưa
-                    var category = await _context.categories
-                        .FirstOrDefaultAsync(c => c.Name == categoryName);
+                    var category = existingCategories
+                        .FirstOrDefault(c => c.Name == categoryName);
 
                     if (category == null)
                     {
                         category = new Category
                         {
                             Name = categoryName,
-                            Description = $"{categoryName}"
+                            Description = categoryName
                         };
+
                         _context.categories.Add(category);
                         await _context.SaveChangesAsync();
+
+                        existingCategories.Add(category);
                     }
 
-                    var firstVariant = item["variants"]?[0];
-                    var firstImage = item["images"]?[0];
+                    // ================================
+                    // DESCRIPTION (HTML → TEXT)
+                    // ================================
+                    string description = CleanHtml(item["body_html"]?.ToString());
 
-                    // Strip HTML description
-                    string html = item["body_html"]?.ToString() ?? "";
-                    var doc = new HtmlDocument();
-                    doc.LoadHtml(html);
-                    string plainDescription = doc.DocumentNode.InnerText;
+                    // ================================
+                    // VARIANT + IMAGE
+                    // ================================
+                    var firstVariant = item["variants"]?.FirstOrDefault();
+                    var firstImage = item["images"]?.FirstOrDefault();
 
-                    // Cắt description nếu quá dài để tránh lỗi database
-                    if (plainDescription.Length > 4000)
-                        plainDescription = plainDescription.Substring(0, 4000);
-                    Random rnd = new Random();
-                    int stock = rnd.Next(50, 201);
+                    decimal price = 0;
+                    decimal.TryParse(firstVariant?["price"]?.ToString(), out price);
+
+                    // ================================
+                    // PRODUCT
+                    // ================================
+                    string productName = item["title"]?.ToString()?.Trim() ?? "No Name";
+
+                    if (existingProductNames.Contains(productName))
+                        continue;
+
                     var product = new Product
                     {
-                        Name = item["title"]?.ToString() ?? "No Name",
-                        Description = plainDescription,
-                        Price = decimal.TryParse(firstVariant?["price"]?.ToString(), out var price) ? price : 0,
-                        Instock = stock,
+                        Name = productName,
+                        Description = description,
+                        Price = price,
+                        Instock = _random.Next(50, 201),
                         ImageUrl = firstImage?["src"]?.ToString(),
                         CategoryId = category.Id
                     };
 
-                    // Check trùng tên để tránh duplicate
-                    if (!_context.products.Any(p => p.Name == product.Name))
-                        _context.products.Add(product);
+                    newProducts.Add(product);
+                    existingProductNames.Add(productName);
                 }
 
-                await _context.SaveChangesAsync();
-                return Ok(new { message = "Categories and Products fetched and saved successfully!" });
+                if (newProducts.Any())
+                {
+                    _context.products.AddRange(newProducts);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new
+                {
+                    message = "Fetch thành công 🎉",
+                    totalAdded = newProducts.Count
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    message = "Scraping failed ❌",
+                    error = ex.Message
+                });
             }
+        }
+
+        // ================================
+        // CLEAN HTML → TEXT
+        // ================================
+        private static string CleanHtml(string html)
+        {
+            if (string.IsNullOrWhiteSpace(html))
+                return "";
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            string text = HtmlEntity.DeEntitize(doc.DocumentNode.InnerText);
+
+            text = text
+                .Replace("\r", " ")
+                .Replace("\n", " ")
+                .Replace("\t", " ");
+
+            text = Regex.Replace(text, @"\s+", " ").Trim();
+
+            if (text.Length > 4000)
+                text = text.Substring(0, 4000);
+
+            return text;
         }
     }
 }

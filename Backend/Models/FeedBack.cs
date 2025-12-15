@@ -18,14 +18,12 @@ namespace Models
         [Required]
         [Column(TypeName = "int")]
         [Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")]
-        public int Rating { get; set; } // Điểm đánh giá từ 1 → 5
+        public int Rating { get; set; } // Điểm đánh giá từ 1 -> 5
 
-        [Required]
         [ForeignKey("User")]
         public int UserId { get; set; }
         public User User { get; set; }
 
-        [Required]
         [ForeignKey("Product")]
         public int ProductId { get; set; }
         public Product Product { get; set; }

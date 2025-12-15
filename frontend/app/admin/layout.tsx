@@ -3,15 +3,15 @@
 import React, { useEffect } from "react";
 import { Layout, Menu, Button } from "antd";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { label } from "framer-motion/client";
 
 const { Header, Content, Sider } = Layout;
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
 
   // Kiểm tra đăng nhập + role admin
   useEffect(() => {
@@ -47,16 +47,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { key: "7", label: <Link href="/admin/orders">Quản lý đơn hàng</Link> },
   ];
 
+  // map pathname sang key menu
+  const menuKeyMap: Record<string, string> = {
+    "/admin": "1",
+    "/admin/users": "2",
+    "/admin/categories": "3",
+    "/admin/products": "4",
+    "/admin/promotions": "5",
+    "/admin/feedbacks": "6",
+    "/admin/orders": "7",
+  };
+
+  const selectedKey = menuKeyMap[pathname] || "1";
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider>
+      {/* Sider scroll độc lập */}
+      <Sider
+        style={{
+          overflow: "auto",
+          height: "100vh",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          bottom: 0,
+        }}
+      >
         <div style={{ color: "white", padding: 16, textAlign: "center", fontSize: 20 }}>
           Admin Panel
         </div>
-        <Menu theme="dark" mode="inline" defaultSelectedKeys={["1"]} items={menuItems} />
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[selectedKey]} // highlight đúng khi refresh
+          items={menuItems}
+        />
       </Sider>
 
-      <Layout style={{ display: "flex", flexDirection: "column" }}>
+      {/* Content */}
+      <Layout style={{ marginLeft: 200, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <Header
           style={{
             height: 64,
