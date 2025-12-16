@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAllOrders, deleteOrder } from "@/services/order-services";
-import { getPaymentByOrderId } from "@/services/payment-services";
+import { getPaidOrders, deleteOrder } from "@/services/order-services";
+import { getPaymentByOrderId, updatePaymentStatus } from "@/services/payment-services";
 import { getPromotionById, Promotion } from "@/services/promotion-services";
 import { getOrderDetailsForAdmin } from "@/services/orderdetail-services";
 import { toast } from "react-toastify";
@@ -42,16 +42,17 @@ export default function AdminOrdersPage() {
   const paymentStatusMap: Record<number, string> = {
     0: "Pending",
     1: "Paid",
-    2: "PaymentFailed",
-    3: "Cancelled",
+    2: "Failed",
+    3: "Refunded",
+    4: "Cancelled",
   };
 
   const statusTextMap: Record<string, string> = {
     Pending: "Chờ thanh toán",
     Paid: "Đã thanh toán",
-    PaymentFailed: "Thanh toán thất bại",
+    Failed: "Thanh toán thất bại",
+    Refunded: "Hoàn tiền",
     Cancelled: "Đã hủy",
-    Refund: "Đơn hoàn",
   };
 
   const statusColorMap: Record<string, string> = {
@@ -64,7 +65,7 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await getAllOrders();
+      const res = await getPaidOrders();
       setOrders(res);
     } catch (err) {
       console.error(err);
@@ -197,7 +198,7 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
 
-            {payment ? (
+            {payment && (
               <div className="mt-4 p-4 border rounded bg-gray-50">
                 <h3 className="font-bold mb-2">Thông tin thanh toán</h3>
                 <p>Phương thức: {payment.paymentMethod}</p>
@@ -214,12 +215,39 @@ export default function AdminOrdersPage() {
                     Mã khuyến mãi: {promotion.code} (-{promotion.discountPercent}%)
                   </p>
                 )}
-              </div>
-            ) : (
-              <div className="mt-4">
-                <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                  Thanh toán ngay
-                </button>
+
+                {/* Dropdown update status */}
+                <div className="mt-2 flex items-center gap-2">
+                  <select
+                    className="border p-1 rounded"
+                    value={payment.status}
+                    onChange={(e) =>
+                      setPayment({ ...payment, status: Number(e.target.value) })
+                    }
+                  >
+                    {Object.entries(paymentStatusMap).map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {statusTextMap[value]}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                    onClick={async () => {
+                      try {
+                        if (payment) {
+                          await updatePaymentStatus(payment.paymentId, payment.status);
+                          fetchOrders();
+                          viewOrderDetails(selectedOrder);
+                        }
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                  >
+                    Cập nhật
+                  </button>
+                </div>
               </div>
             )}
 

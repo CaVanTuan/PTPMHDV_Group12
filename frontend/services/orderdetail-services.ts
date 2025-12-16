@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 export const getOrderDetailsForAdmin = async (orderId: number) => {
   try {
     const res = await api.get(`/api/orderdetails/order/${orderId}`);
-    toast.success("Lấy chi tiết đơn hàng thành công");
     return res.data;
   } catch (error: any) {
     toast.error(error.response?.data?.message || "Lấy chi tiết đơn hàng thất bại");

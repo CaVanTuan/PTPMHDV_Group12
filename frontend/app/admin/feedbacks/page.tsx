@@ -1,15 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FaStar } from "react-icons/fa";
 import {
   getAllFeedback,
   deleteFeedback,
   updateFeedback,
   FeedbackData,
 } from "@/services/feedback-services";
-
 import { getAll } from "@/services/product-services";
 import { toast } from "react-toastify";
+
+// Component StarRating
+function StarRating({ rating, setRating }: { rating: number; setRating: (v: number) => void }) {
+  const [hover, setHover] = useState(0);
+
+  return (
+    <div className="flex gap-1">
+      {Array.from({ length: 5 }).map((_, i) => {
+        const filled = i < (hover || rating);
+        return (
+          <FaStar
+            key={i}
+            size={22}
+            className={`cursor-pointer transition-colors ${filled ? "text-yellow-400" : "text-gray-300"}`}
+            onClick={() => setRating(i + 1)}
+            onMouseEnter={() => setHover(i + 1)}
+            onMouseLeave={() => setHover(0)}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 export default function AdminFeedbacksPage() {
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
@@ -65,7 +88,6 @@ export default function AdminFeedbacksPage() {
         rating,
         productId: productId as number,
       });
-      toast.success("Cập nhật feedback thành công");
       setEditingFeedback(null);
       setContent("");
       setRating(5);
@@ -98,32 +120,28 @@ export default function AdminFeedbacksPage() {
             <textarea
               className="border p-2"
               value={content}
-              onChange={e => setContent(e.target.value)}
+              onChange={(e) => setContent(e.target.value)}
               placeholder="Nội dung feedback"
             />
-            <input
-              type="number"
-              className="border p-2"
-              value={rating}
-              min={1}
-              max={5}
-              onChange={e => setRating(parseInt(e.target.value))}
-              placeholder="Rating"
-            />
+            
+            {/* Star rating */}
+            <StarRating rating={rating} setRating={setRating} />
+
             <select
               className="border p-2"
               value={productId}
-              onChange={e =>
+              onChange={(e) =>
                 setProductId(e.target.value ? parseInt(e.target.value) : "")
               }
             >
               <option value="">Chọn sản phẩm</option>
-              {products.map(p => (
+              {products.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
               ))}
             </select>
+
             <div className="flex gap-2 mt-2">
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded"
@@ -156,13 +174,15 @@ export default function AdminFeedbacksPage() {
             </tr>
           </thead>
           <tbody>
-            {feedbacks.map(fb => (
+            {feedbacks.map((fb) => (
               <tr key={fb.id}>
                 <td className="border p-2">
-                  {products.find(p => p.id === fb.productId)?.name ?? "-"}
+                  {products.find((p) => p.id === fb.productId)?.name ?? "-"}
                 </td>
                 <td className="border p-2">{fb.content}</td>
-                <td className="border p-2">{fb.rating}</td>
+                <td className="border p-2">
+                  <StarRating rating={fb.rating} setRating={() => {}} />
+                </td>
                 <td className="border p-2 flex gap-2">
                   <button
                     className="bg-yellow-500 text-white px-2 py-1 rounded"

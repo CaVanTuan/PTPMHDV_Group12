@@ -106,12 +106,12 @@ export const cancelPayment = async (paymentId: number) => {
 // ===============================
 export const updatePaymentStatus = async (
   id: number,
-  newStatus: string
+  newStatus: number
 ) => {
   try {
     const res = await api.put(
       `/api/Payment/update-status/${id}`,
-      `"${newStatus}"`,
+      { status: newStatus }, 
       { headers: { "Content-Type": "application/json" } }
     );
     toast.success(res.data.message);

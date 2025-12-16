@@ -11,7 +11,7 @@ export interface FeedbackData {
   content: string;      // nội dung đánh giá
   rating: number;       // số sao (1 - 5)
   userId?: number;      // id user (backend tự gán)
-  userName?: string;    // 👈 tên người đánh giá (backend trả về)
+  userName?: string;    // tên user (backend tự gán)
 }
 
 /**

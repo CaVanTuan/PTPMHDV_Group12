@@ -5,7 +5,9 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using System.Security.Claims;
+using OfficeOpenXml;
 
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,7 +97,6 @@ builder.Services.AddSwaggerGen(options =>
     });
     
 });
-
 
 var app = builder.Build();
 

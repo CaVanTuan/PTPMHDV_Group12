@@ -114,7 +114,6 @@ export const deleteProduct = async (id: number): Promise<void> => {
   }
 };
 
-// Upload Excel để thêm nhiều sản phẩm (Admin)
 export const uploadExcelSheets = async (file: File): Promise<UploadExcelResult | undefined> => {
   try {
     const formData = new FormData();
@@ -124,12 +123,7 @@ export const uploadExcelSheets = async (file: File): Promise<UploadExcelResult |
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    if (res.data.errors && res.data.errors.length > 0) {
-      toast.warn(`Upload hoàn tất, có lỗi ở ${res.data.errors.length} row`);
-    } else {
-      toast.success("Upload Excel thành công");
-    }
-
+    // Trả về dữ liệu, không toast nữa
     return res.data;
   } catch (error) {
     handleError(error);

@@ -236,32 +236,19 @@ namespace Controllers
         // 4. ADMIN UPDATE STATUS
         // ==================================================
         [HttpPut("update-status/{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string newStatus)
+        public async Task<IActionResult> UpdateStatus(
+    int id,
+    [FromBody] UpdatePaymentStatusDto dto
+)
         {
             var payment = await _context.payments.FindAsync(id);
-            if (payment == null) return NotFound();
+            if (payment == null)
+                return NotFound(new { message = "Payment không tồn tại" });
 
-            if (!Enum.TryParse<PaymentStatus>(newStatus, out var status))
-                return BadRequest(new { message = "Trạng thái không hợp lệ." });
-
-            payment.Status = status;
-
-            var order = await _context.orders.FindAsync(payment.OrderId);
-            if (order != null)
-            {
-                order.OrderStatus = status switch
-                {
-                    PaymentStatus.Paid => "Paid",
-                    PaymentStatus.Pending => "Pending",
-                    PaymentStatus.Failed => "PaymentFailed",
-                    PaymentStatus.Cancelled => "Cancelled",
-                    _ => order.OrderStatus
-                };
-            }
-
+            payment.Status = dto.Status;
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Cập nhật trạng thái thành công!", payment });
+
+            return Ok(new { message = "Cập nhật trạng thái payment thành công" });
         }
 
         // ==================================================
@@ -348,5 +335,9 @@ namespace Controllers
         public int? PromoId { get; set; }
         public string Address { get; set; } = null!;
         public string PaymentMethod { get; set; } = null!;
+    }
+    public class UpdatePaymentStatusDto
+    {
+        public PaymentStatus Status { get; set; }
     }
 }

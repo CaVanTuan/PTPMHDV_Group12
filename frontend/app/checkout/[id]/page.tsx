@@ -81,14 +81,12 @@ export default function CheckoutPage() {
 
     const fetchPromos = async () => {
       try {
-        // 1️⃣ GEN/User
         const myPromos = await getMyPromotions();
         const gen = myPromos.filter(
           p => p.applyType === PromotionApplyType.User || p.applyType === PromotionApplyType.General
         );
         setGenPromotions(gen);
 
-        // 2️⃣ Auto Product/Category
         const prodPromoLists = await Promise.all(
           order.orderDetails.map(od => getApplicablePromotionsForProduct(od.productId, od.product?.categoryId))
         );
@@ -96,9 +94,6 @@ export default function CheckoutPage() {
           new Map(prodPromoLists.flat().map(p => [p.promotionId, p])).values()
         );
         setAutoPromotions(auto);
-
-        console.log("Auto promotions:", auto);
-        console.log("GEN/User promotions:", gen);
 
       } catch {
         toast.error("Không tải được danh sách khuyến mãi hợp lệ");
@@ -186,7 +181,6 @@ export default function CheckoutPage() {
       if (promoId) payload.promoId = promoId;
 
       await createPayment(payload);
-      toast.success("Tạo payment thành công!");
       router.push(`/order/${order.orderId}`);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Thanh toán thất bại");

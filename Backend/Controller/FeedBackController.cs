@@ -86,13 +86,23 @@ namespace Controllers
             _context.Feedbacks.Add(feedback);
             await _context.SaveChangesAsync();
 
-            return Ok(feedback);
+            var result = new
+            {
+                feedback.Id,
+                feedback.Content,
+                feedback.Rating,
+                feedback.ProductId,
+                feedback.UserId,
+                UserName = (await _context.users.FindAsync(userId))?.FullName
+            };
+
+            return Ok(result);
         }
 
         // PUT: api/Feedback/5
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Update(int id, [FromBody] Feedback feedback)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateFeedbackDto dto)
         {
             var (userId, role) = GetUserInfo();
 
@@ -104,13 +114,25 @@ namespace Controllers
             if (role != "Admin" && existing.UserId != userId)
                 return Forbid("You cannot edit this feedback");
 
-            existing.Content = feedback.Content;
-            existing.Rating = feedback.Rating;
-            existing.ProductId = feedback.ProductId;
+            existing.Content = dto.Content;
+            existing.Rating = dto.Rating;
+
+            // Nếu admin muốn update productId
+            if (dto.ProductId.HasValue && role == "Admin")
+                existing.ProductId = dto.ProductId.Value;
+
             existing.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return Ok(existing);
+            return Ok(new
+            {
+                existing.Id,
+                existing.Content,
+                existing.Rating,
+                existing.ProductId,
+                existing.UserId,
+                UserName = (await _context.users.FindAsync(existing.UserId))?.FullName
+            });
         }
 
         // DELETE: api/Feedback/5
@@ -126,12 +148,18 @@ namespace Controllers
 
             // User chỉ xoá feedback của mình, Admin được xoá tất cả
             if (role != "Admin" && feedback.UserId != userId)
-                return Forbid("You cannot delete this feedback");
+                return Forbid("Không thể xoá feedback này");
 
             _context.Feedbacks.Remove(feedback);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Feedback deleted successfully" });
+            return Ok(new { message = "Xóa feedback thành công" });
         }
+    }
+    public class UpdateFeedbackDto
+    {
+        public string Content { get; set; }
+        public int Rating { get; set; }
+        public int? ProductId { get; set; }
     }
     public class CreateFeedbackDto
     {

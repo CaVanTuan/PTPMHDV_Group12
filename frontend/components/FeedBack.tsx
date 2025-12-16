@@ -2,28 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
-import {
+import { toast } from "react-toastify";
+import { jwtDecode } from "jwt-decode"; import {
   getFeedbackByProduct,
   createFeedback,
   updateFeedback,
   deleteFeedback,
   FeedbackData,
 } from "@/services/feedback-services";
-import { toast } from "react-toastify";
 
 interface FeedbackProps {
   productId: number;
-  currentUserId: number;
-  isAdmin?: boolean;
 }
 
-export default function Feedback({
-  productId,
-  currentUserId,
-  isAdmin,
-}: FeedbackProps) {
+// Claim từ token JWT
+interface TokenPayload {
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role": string;
+}
+
+export default function Feedback({ productId }: FeedbackProps) {
   const [feedbacks, setFeedbacks] = useState<FeedbackData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Tạo mới
   const [newContent, setNewContent] = useState("");
@@ -36,42 +38,63 @@ export default function Feedback({
   const [editingRating, setEditingRating] = useState(0);
   const [editingHover, setEditingHover] = useState(0);
 
-  // Lấy feedback
-  const fetchFeedbacks = async () => {
-    try {
-      setLoading(true);
-      const data = await getFeedbackByProduct(productId);
-      setFeedbacks(data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Không thể tải feedback");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Decode token khi mount
   useEffect(() => {
-    fetchFeedbacks();
-  }, [productId]);
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  // Tạo feedback
+    try {
+      const decoded = jwtDecode<TokenPayload>(token);
+      const userId = Number(decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]);
+      const role = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role"];
+
+      setCurrentUserId(userId);
+      setIsAdmin(role === "Admin");
+    } catch (err) {
+      console.error("JWT decode lỗi:", err);
+      setCurrentUserId(null);
+      setIsAdmin(false);
+    }
+  }, []);
+
+  // Fetch feedback sau khi có currentUserId
+  useEffect(() => {
+    if (currentUserId === null) return;
+
+    const fetchFeedbacks = async () => {
+      try {
+        setLoading(true);
+        const data = await getFeedbackByProduct(productId);
+        console.log("Feedback data:", data);
+        console.log("Current User ID:", currentUserId);
+        setFeedbacks(data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Không thể tải feedback");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeedbacks();
+  }, [productId, currentUserId]);
+
+  // Tạo feedback mới
   const handleCreate = async () => {
     if (!newContent || newRating < 1 || newRating > 5) {
       toast.error("Nội dung và đánh giá hợp lệ từ 1-5");
       return;
     }
-
     try {
-      await createFeedback({
+      const created = await createFeedback({
         productId,
         content: newContent,
         rating: newRating,
       });
-
+      setFeedbacks((prev) => [...prev, created]);
       setNewContent("");
       setNewRating(0);
       setHoverRating(0);
-      fetchFeedbacks();
     } catch (err) {
       console.error(err);
     }
@@ -83,16 +106,16 @@ export default function Feedback({
       toast.error("Nội dung và đánh giá hợp lệ từ 1-5");
       return;
     }
-
     try {
-      await updateFeedback(id, {
+      const updated = await updateFeedback(id, {
         productId,
         content: editingContent,
         rating: editingRating,
       });
-
+      setFeedbacks((prev) =>
+        prev.map((f) => (f.id === id ? updated : f))
+      );
       setEditingId(null);
-      fetchFeedbacks();
     } catch (err) {
       console.error(err);
     }
@@ -101,10 +124,9 @@ export default function Feedback({
   // Xoá feedback
   const handleDelete = async (id: number) => {
     if (!confirm("Bạn có chắc muốn xoá feedback này?")) return;
-
     try {
       await deleteFeedback(id);
-      fetchFeedbacks();
+      setFeedbacks((prev) => prev.filter((f) => f.id !== id));
     } catch (err) {
       console.error(err);
     }
@@ -123,9 +145,7 @@ export default function Feedback({
         <FaStar
           key={i}
           size={22}
-          className={`transition-colors ${
-            filled ? "text-yellow-400" : "text-gray-300"
-          } ${setRating ? "cursor-pointer" : ""}`}
+          className={`transition-colors ${filled ? "text-yellow-400" : "text-gray-300"} ${setRating ? "cursor-pointer" : ""}`}
           onClick={() => setRating && setRating(i + 1)}
           onMouseEnter={() => setHover && setHover(i + 1)}
           onMouseLeave={() => setHover && setHover(0)}
@@ -134,6 +154,7 @@ export default function Feedback({
     });
 
   if (loading) return <p>Đang tải feedback...</p>;
+  if (currentUserId === null) return <p>Đang xác thực user...</p>;
 
   return (
     <div className="mt-10">
@@ -167,25 +188,15 @@ export default function Feedback({
       ) : (
         <div className="space-y-4">
           {feedbacks.map((f) => (
-            <div
-              key={f.id}
-              className="bg-white p-4 rounded-lg shadow flex flex-col gap-2"
-            >
+            <div key={f.id} className="bg-white p-4 rounded-lg shadow flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 font-semibold">
                   <span>
-                    {f.userId === currentUserId
-                      ? "Bạn"
-                      : f.userName || "Người dùng"}
+                    {f.userId === currentUserId ? "Bạn" : f.userName || "Người dùng"}
                   </span>
                   <div className="flex gap-1">
                     {editingId === f.id
-                      ? renderStars(
-                          editingRating,
-                          setEditingRating,
-                          editingHover,
-                          setEditingHover
-                        )
+                      ? renderStars(editingRating, setEditingRating, editingHover, setEditingHover)
                       : renderStars(f.rating)}
                   </div>
                 </div>
@@ -213,7 +224,7 @@ export default function Feedback({
                 )}
               </div>
 
-              {editingId === f.id ? (
+              {editingId === f.id && (
                 <>
                   <textarea
                     className="w-full border rounded-lg p-2 resize-none"
@@ -222,12 +233,7 @@ export default function Feedback({
                     onChange={(e) => setEditingContent(e.target.value)}
                   />
                   <div className="flex gap-1">
-                    {renderStars(
-                      editingRating,
-                      setEditingRating,
-                      editingHover,
-                      setEditingHover
-                    )}
+                    {renderStars(editingRating, setEditingRating, editingHover, setEditingHover)}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -244,9 +250,9 @@ export default function Feedback({
                     </button>
                   </div>
                 </>
-              ) : (
-                <p className="text-gray-700">{f.content}</p>
               )}
+
+              {editingId !== f.id && <p className="text-gray-700">{f.content}</p>}
             </div>
           ))}
         </div>

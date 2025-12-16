@@ -1,61 +1,96 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Row, Col, Card } from "antd";
-import { getAllUsers } from "@/services/user-services";
-import { getAll as getAllProducts } from "@/services/product-services";
-import { getAllOrders } from "@/services/order-services";
+import { useEffect, useState } from "react";
+import { Spin, Row, Col } from "antd";
 import { toast } from "react-toastify";
 
+import SummaryCards from "./components/SummaryCards";
+import OrdersChart from "./components/OrdersChart";
+import TopProducts from "./components/TopProducts";
+
+import {
+  getDashboardSummary,
+  getOrdersByMonth,
+  getTopProducts,
+} from "@/services/report-services";
+
+/* ======================
+   TYPES
+====================== */
+interface DashboardSummary {
+  totalUsers: number;
+  totalOrders: number;
+  totalRevenue: number;
+  totalProducts: number;
+}
+
+/* ======================
+   DEFAULT STATE
+====================== */
+const EMPTY_SUMMARY: DashboardSummary = {
+  totalUsers: 0,
+  totalOrders: 0,
+  totalRevenue: 0,
+  totalProducts: 0,
+};
+
 export default function DashboardPage() {
-  const [totalUsers, setTotalUsers] = useState<number>(0);
-  const [totalProducts, setTotalProducts] = useState<number>(0);
-  const [totalOrders, setTotalOrders] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<DashboardSummary>(EMPTY_SUMMARY);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchDashboard = async () => {
       try {
-        const users = await getAllUsers(); // trả về array thẳng
-        const products = await getAllProducts(); // trả về array thẳng
-        const orders = await getAllOrders(); // trả về res.data.orders
+        const [summaryRes, chartRes, topRes] = await Promise.all([
+          getDashboardSummary(),
+          getOrdersByMonth(),
+          getTopProducts(),
+        ]);
 
-        setTotalUsers(users?.length ?? 0);
-        setTotalProducts(products?.length ?? 0);
-        setTotalOrders(orders?.length ?? 0);
-      } catch (err) {
-        console.error(err);
-        toast.error("Lấy dữ liệu dashboard thất bại");
+        setSummary(summaryRes ?? EMPTY_SUMMARY);
+        setChartData(chartRes ?? []);
+        setTopProducts(topRes ?? []);
+      } catch (error) {
+        console.error(error);
+        toast.error("Không thể tải dashboard 😢");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    fetchData();
+    fetchDashboard();
   }, []);
 
+  /* ======================
+     LOADING
+  ====================== */
   if (loading) {
-    return <p>Đang tải dữ liệu...</p>;
+    return (
+      <div className="flex justify-center items-center h-[60vh]">
+        <Spin size="large" />
+      </div>
+    );
   }
 
+  /* ======================
+     UI
+  ====================== */
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-      <Row gutter={16}>
-        <Col span={8}>
-          <Card title="Total Users" variant="outlined">
-            {totalUsers}
-          </Card>
+      <h1 className="text-3xl font-bold mb-6">📊 Admin Dashboard</h1>
+
+      {/* SUMMARY */}
+      <SummaryCards summary={summary} />
+
+      {/* CHART + TOP PRODUCTS */}
+      <Row gutter={16} className="mt-6">
+        <Col span={14}>
+          <OrdersChart data={chartData} />
         </Col>
-        <Col span={8}>
-          <Card title="Total Products" variant="outlined">
-            {totalProducts}
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card title="Total Orders" variant="outlined">
-            {totalOrders}
-          </Card>
+        <Col span={10}>
+          <TopProducts data={topProducts} />
         </Col>
       </Row>
     </div>

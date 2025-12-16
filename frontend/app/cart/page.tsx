@@ -157,7 +157,6 @@ export default function CartPage() {
     }
     try {
       const order = await createOrder(selectedItems);
-      toast.success("Tạo đơn hàng thành công!");
       setSelectedItems([]);
       setSelectAll(false);
       const data = await getCart();
