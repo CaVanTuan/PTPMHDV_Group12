@@ -12,7 +12,7 @@ export default function TopProducts({ data }: { data: any[] }) {
   ];
 
   return (
-    <Card title="🔥 Top 5 Best Selling Products">
+    <Card title="🔥 Top 5 Sản Phẩm Bán Chạy Nhất">
       <Table
         columns={columns}
         dataSource={data}

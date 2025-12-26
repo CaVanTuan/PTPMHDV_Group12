@@ -84,7 +84,6 @@ export const orderByProduct = async (
 export const getPaidOrders = async () => {
   try {
     const res = await api.get("/api/Order/paid");
-    toast.success(res.data.message || "Lấy các đơn hàng đã mua thành công!");
     return res.data.orders;
   } catch (error: any) {
     toast.error(error.response?.data?.message || "Lấy các đơn hàng đã mua thất bại");

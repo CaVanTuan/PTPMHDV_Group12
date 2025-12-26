@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getCart, updateCartQuantity, deleteFromCart } from "@/services/cart-services";
 import { createOrder } from "@/services/order-services";
 import { useRouter } from "next/navigation";
@@ -36,6 +36,10 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [quantityInputs, setQuantityInputs] = useState<
+    Record<number, number | "">
+  >({});
+  const debounceTimers = useRef<Record<number, NodeJS.Timeout>>({});
   const router = useRouter();
 
   // --- Load cart + promotions ---
@@ -66,6 +70,12 @@ export default function CartPage() {
         }));
 
         setCartItems(mappedCart);
+        const quantityMap: Record<number, number> = {};
+        mappedCart.forEach((item: any) => {
+          quantityMap[item.cartItemId] = item.quantity;
+        });
+        setQuantityInputs(quantityMap);
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -103,8 +113,15 @@ export default function CartPage() {
   // --- Chỉnh số lượng ---
   const handleQuantityChange = async (cartItemId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
+
+    setQuantityInputs(prev => ({
+      ...prev,
+      [cartItemId]: newQuantity,
+    }));
+
     try {
       await updateCartQuantity({ cartItemId, quantity: newQuantity });
+
       const data = await getCart();
       setCartItems(data.map((item: any) => ({
         cartItemId: item.cartItemId,
@@ -119,7 +136,13 @@ export default function CartPage() {
           }
           : undefined,
       })));
-      // --- Cập nhật NavBar ---
+
+      const map: Record<number, number> = {};
+      data.forEach((item: any) => {
+        map[item.cartItemId] = item.quantity;
+      });
+      setQuantityInputs(map);
+
       window.dispatchEvent(new Event("cartChanged"));
     } catch (err) {
       console.error(err);
@@ -182,6 +205,37 @@ export default function CartPage() {
     }
   };
 
+  // -----Nhập số lượng sản phẩm------
+  const handleInputChange = (cartItemId: number, value: string) => {
+    // Chỉ cho nhập số
+    if (!/^\d*$/.test(value)) return;
+
+    // Cho phép rỗng (user đang nhập lại)
+    if (value === "") {
+      setQuantityInputs(prev => ({
+        ...prev,
+        [cartItemId]: "",
+      }));
+      return;
+    }
+
+    const num = Number(value);
+    if (num < 1) return;
+
+    setQuantityInputs(prev => ({
+      ...prev,
+      [cartItemId]: num,
+    }));
+
+    if (debounceTimers.current[cartItemId]) {
+      clearTimeout(debounceTimers.current[cartItemId]);
+    }
+
+    debounceTimers.current[cartItemId] = setTimeout(() => {
+      handleQuantityChange(cartItemId, num);
+    }, 400);
+  };
+
   // --- Tổng tiền ---
   const totalPrice = cartItems
     .filter(item => selectedItems.includes(item.cartItemId))
@@ -219,7 +273,21 @@ export default function CartPage() {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => handleQuantityChange(item.cartItemId, item.quantity - 1)} className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition">-</button>
-              <span className="text-gray-800">{item.quantity}</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                className="w-16 text-center border rounded px-1 py-0.5"
+                value={quantityInputs[item.cartItemId] ?? item.quantity}
+                onChange={(e) =>
+                  handleInputChange(item.cartItemId, e.target.value)
+                }
+                onBlur={() => {
+                  const val = quantityInputs[item.cartItemId];
+                  if (val === "" || val < 1) {
+                    handleQuantityChange(item.cartItemId, 1);
+                  }
+                }}
+              />
               <button onClick={() => handleQuantityChange(item.cartItemId, item.quantity + 1)} className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition">+</button>
             </div>
             <button onClick={() => handleDelete(item.cartItemId)} className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition">Xóa</button>

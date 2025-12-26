@@ -8,7 +8,7 @@ export const getCart = async () => {
     return res.data;
   } catch (error: any) {
     toast.error(error.response?.data || "Lấy giỏ hàng thất bại");
-    throw error;
+    toast.error(error);
   }
 };
 
@@ -19,7 +19,7 @@ export const addToCart = async (data: { productId: number; quantity: number }) =
     return res.data;
   } catch (error: any) {
     toast.error(error.response?.data || "Có lỗi xảy ra");
-    throw error;
+    toast.error(error);
   }
 };
 
@@ -30,11 +30,10 @@ export const updateCartQuantity = async (data: {
 }) => {
   try {
     const res = await api.put("/api/CartItems/update-quantity", data);
-    toast.success(res.data.message || "Cập nhật giỏ hàng thành công");
     return res.data;
   } catch (error: any) {
     toast.error(error.response?.data || "Cập nhật thất bại");
-    throw error;
+    toast.error(error);
   }
 };
 
@@ -46,6 +45,6 @@ export const deleteFromCart = async (cartItemId: number) => {
     return res.data;
   } catch (error: any) {
     toast.error(error.response?.data || "Xoá sản phẩm thất bại");
-    throw error;
+    toast.error(error);
   }
 };

@@ -167,10 +167,10 @@ export default function AdminFeedbacksPage() {
         <table className="w-full border">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border p-2">Product</th>
-              <th className="border p-2">Content</th>
-              <th className="border p-2">Rating</th>
-              <th className="border p-2">Actions</th>
+              <th className="border p-2">Sản phẩm</th>
+              <th className="border p-2">Nội dung đánh giá</th>
+              <th className="border p-2">Số sao</th>
+              <th className="border p-2">Hành động</th>
             </tr>
           </thead>
           <tbody>

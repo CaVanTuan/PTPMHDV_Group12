@@ -121,11 +121,11 @@ export default function AdminOrdersPage() {
         <table className="w-full border">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border p-2">Order ID</th>
+              <th className="border p-2">ID</th>
               <th className="border p-2">Tổng tiền</th>
               <th className="border p-2">Trạng thái</th>
               <th className="border p-2">Ngày</th>
-              <th className="border p-2">Actions</th>
+              <th className="border p-2">Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -144,7 +144,7 @@ export default function AdminOrdersPage() {
                     className="bg-blue-500 text-white px-2 py-1 rounded"
                     onClick={() => viewOrderDetails(o)}
                   >
-                    View
+                    Chi tiết
                   </button>
                   <button
                     className="bg-red-500 text-white px-2 py-1 rounded"
@@ -159,7 +159,7 @@ export default function AdminOrdersPage() {
                       }
                     }}
                   >
-                    Delete
+                    Xóa
                   </button>
                 </td>
               </tr>

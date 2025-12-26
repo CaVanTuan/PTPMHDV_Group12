@@ -26,7 +26,7 @@ export default function CategoriesPage() {
     setLoading(true);
     try {
       const data = await getAllCategories();
-      setCategories(data);
+      setCategories(data.reverse());
     } catch (error) {
       console.error(error);
     }
@@ -90,12 +90,12 @@ export default function CategoriesPage() {
     { title: "Tên danh mục", dataIndex: "name", key: "name" },
     { title: "Mô tả", dataIndex: "description", key: "description" },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       render: (_: any, record: Category) => (
         <Space>
           <Button type="primary" size="small" onClick={() => handleEdit(record)}>
-            Edit
+            Sửa
           </Button>
           <Button
             type="primary"
@@ -103,7 +103,7 @@ export default function CategoriesPage() {
             size="small"
             onClick={() => handleDelete(record.id)}
           >
-            Delete
+            Xóa
           </Button>
         </Space>
       ),

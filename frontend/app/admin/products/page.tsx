@@ -101,8 +101,10 @@ export default function ProductsPage() {
     setEditingProduct(null);
     setRemoveImage(false);
     form.resetFields();
-    setImageFileList([{ uid: "-1", name: "no_image.png", status: "done", url: "/no_image.png" }]);
+
+    setImageFileList([]);
     setImageFile(null);
+
     setModalOpen(true);
   };
 
@@ -168,15 +170,15 @@ export default function ProductsPage() {
       ),
     },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       render: (_: any, record: Product) => (
         <Space>
           <Button type="primary" size="small" onClick={() => openModalForEdit(record)}>
-            Edit
+            Sửa
           </Button>
           <Button type="primary" danger size="small" onClick={() => handleDelete(record.id)}>
-            Delete
+            Xóa
           </Button>
         </Space>
       ),

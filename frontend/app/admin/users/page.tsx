@@ -23,7 +23,7 @@ export default function UsersPage() {
         setLoading(true);
         try {
             const data = await getAllUsers();
-            if (data) setUsers(data);
+            if (data) setUsers(data.reverse());
         } catch (err: any) {
             toast.error("Lấy danh sách user thất bại!");
         } finally {
@@ -47,11 +47,10 @@ export default function UsersPage() {
 
     const columns = [
         { title: "ID", dataIndex: "id", key: "id" },
-        { title: "Username", dataIndex: "username", key: "username" },
-        { title: "Full Name", dataIndex: "fullName", key: "fullName" },
+        { title: "Tài khoản", dataIndex: "username", key: "username" },
+        { title: "Họ và tên", dataIndex: "fullName", key: "fullName" },
         { title: "Email", dataIndex: "email", key: "email" },
-        { title: "Phone", dataIndex: "phone", key: "phone" },
-        { title: "Role", dataIndex: "role", key: "role" },
+        { title: "SDT", dataIndex: "phone", key: "phone" },
         {
             title: "Status",
             key: "status",

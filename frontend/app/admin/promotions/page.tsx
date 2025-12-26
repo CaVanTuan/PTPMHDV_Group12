@@ -24,7 +24,7 @@ export default function AdminPromotionsPage() {
 
     const [code, setCode] = useState("");
     const [desc, setDesc] = useState("");
-    const [discount, setDiscount] = useState(0);
+    const [discount, setDiscount] = useState("");
     const [applyType, setApplyType] = useState<PromotionApplyType>(
         PromotionApplyType.General
     );
@@ -63,7 +63,7 @@ export default function AdminPromotionsPage() {
         setEditingPromo(null);
         setCode("");
         setDesc("");
-        setDiscount(0);
+        setDiscount("");
         setApplyType(PromotionApplyType.General);
         setStartDate("");
         setEndDate("");
@@ -121,7 +121,7 @@ export default function AdminPromotionsPage() {
         setEditingPromo(promo);
         setCode(promo.code);
         setDesc(promo.description || "");
-        setDiscount(promo.discountPercent);
+        setDiscount(promo.discountPercent.toString());
         setApplyType(promo.applyType);
         setStartDate(promo.startDate.slice(0, 10));
         setEndDate(promo.endDate.slice(0, 10));
@@ -202,7 +202,7 @@ export default function AdminPromotionsPage() {
 
     return (
         <div className="p-4">
-            <h1 className="text-xl font-bold mb-4">Quản lý Promotions</h1>
+            <h1 className="text-xl font-bold mb-4">Quản lý Mã giảm giá</h1>
 
             {/* Form tạo / cập nhật */}
             <div className="mb-6 p-4 border rounded-md">
@@ -218,19 +218,24 @@ export default function AdminPromotionsPage() {
                     />
                     <input
                         className="border p-2"
-                        placeholder="Description"
+                        placeholder="Mô tả"
                         value={desc}
                         onChange={e => setDesc(e.target.value)}
                     />
                     <div className="flex gap-2">
                         <input
-                            type="number"
-                            min={0}
-                            max={100}
+                            type="text"
                             className="border p-2"
-                            placeholder="Discount (%)"
+                            placeholder="Giảm (%)"
                             value={discount}
-                            onChange={e => setDiscount(parseFloat(e.target.value))}
+                            onChange={(e) => {
+                                const value = e.target.value;
+
+                                // Chỉ cho phép rỗng hoặc số từ 0–100
+                                if (/^(100|[1-9]?\d)?$/.test(value)) {
+                                    setDiscount(value);
+                                }
+                            }}
                         />
                         <span className="self-center">%</span>
                     </div>
@@ -289,13 +294,13 @@ export default function AdminPromotionsPage() {
                 <table className="w-full border">
                     <thead className="bg-gray-100">
                         <tr>
-                            <th className="border p-2">Code</th>
-                            <th className="border p-2">Discount</th>
-                            <th className="border p-2">ApplyType</th>
-                            <th className="border p-2">StartDate</th>
-                            <th className="border p-2">EndDate</th>
-                            <th className="border p-2">Status</th>
-                            <th className="border p-2">Actions</th>
+                            <th className="border p-2">Mã</th>
+                            <th className="border p-2">Giảm giá (%)</th>
+                            <th className="border p-2">Loại áp dụng</th>
+                            <th className="border p-2">Ngày bắt đầu</th>
+                            <th className="border p-2">Ngày hết hạn</th>
+                            <th className="border p-2">Trạng thái</th>
+                            <th className="border p-2">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>

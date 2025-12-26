@@ -30,6 +30,16 @@ namespace Controllers
 
             if (request.StartDate >= request.EndDate)
                 return BadRequest(new { message = "StartDate phải nhỏ hơn EndDate" });
+            var now = DateTime.UtcNow.Date;
+
+            if (request.EndDate.Date < now)
+            {
+                return BadRequest(new { message = "EndDate không được nhỏ hơn ngày hiện tại" });
+            }
+            if (request.StartDate.Date < now)
+            {
+                return BadRequest(new { message = "StartDate không được nhỏ hơn ngày hiện tại" });
+            }
 
             // Validate theo ApplyType
             var validateResult = ValidateApplyType(request);

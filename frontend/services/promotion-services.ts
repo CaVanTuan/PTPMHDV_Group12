@@ -55,7 +55,7 @@ const transformPromotion = (promo: any): Promotion => ({
 // Error handler
 // ===============================
 const handleError = (error: any) => {
-  toast.error(error.response?.data?.message || "Có lỗi xảy ra");
+  return Promise.reject(error);
 };
 
 // ===============================
@@ -105,10 +105,9 @@ export const getPromotionById = async (
 export const createPromotion = async (data: any) => {
   try {
     const res = await api.post("/api/promotions", data);
-    toast.success(res.data.message);
     return res.data;
   } catch (error) {
-    handleError(error);
+    return Promise.reject(error);
   }
 };
 
@@ -118,10 +117,9 @@ export const createPromotion = async (data: any) => {
 export const updatePromotion = async (id: number, data: any) => {
   try {
     const res = await api.put(`/api/promotions/${id}`, data);
-    toast.success(res.data.message);
     return res.data;
   } catch (error) {
-    handleError(error);
+    return Promise.reject(error);
   }
 };
 
@@ -131,9 +129,9 @@ export const updatePromotion = async (id: number, data: any) => {
 export const deletePromotion = async (id: number) => {
   try {
     const res = await api.delete(`/api/promotions/${id}`);
-    toast.success(res.data.message);
+    return res.data;
   } catch (error) {
-    handleError(error);
+    return Promise.reject(error);
   }
 };
 
