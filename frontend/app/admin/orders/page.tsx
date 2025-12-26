@@ -39,6 +39,16 @@ export default function AdminOrdersPage() {
   const [payment, setPayment] = useState<Payment | null>(null);
   const [promotion, setPromotion] = useState<Promotion | null>(null);
 
+  const [filterStatus, setFilterStatus] = useState<"all" | string>("all");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const filteredOrders = orders
+    .filter(o => filterStatus === "all" || o.orderStatus === filterStatus)
+    .sort((a, b) => {
+      const dateA = new Date(a.orderDate).getTime();
+      const dateB = new Date(b.orderDate).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
   const paymentStatusMap: Record<number, string> = {
     0: "Pending",
     1: "Paid",
@@ -115,6 +125,36 @@ export default function AdminOrdersPage() {
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Quản lý Đơn hàng</h1>
 
+      <div className="flex gap-4 mb-4">
+        <div>
+          <label>Trạng thái:</label>
+          <select
+            className="border p-1"
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+          >
+            <option value="all">Tất cả</option>
+            <option value="Pending">Chờ thanh toán</option>
+            <option value="Paid">Đã thanh toán</option>
+            <option value="Failed">Thanh toán thất bại</option>
+            <option value="Refunded">Hoàn tiền</option>
+            <option value="Cancelled">Đã hủy</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Sắp xếp:</label>
+          <select
+            className="border p-1"
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value as "newest" | "oldest")}
+          >
+            <option value="newest">Mới nhất</option>
+            <option value="oldest">Cũ nhất</option>
+          </select>
+        </div>
+      </div>
+
       {loading ? (
         <p>Đang tải...</p>
       ) : (
@@ -129,7 +169,7 @@ export default function AdminOrdersPage() {
             </tr>
           </thead>
           <tbody>
-            {orders.map((o) => (
+            {filteredOrders.map((o) => (
               <tr key={o.orderId}>
                 <td className="border p-2">{o.orderId}</td>
                 <td className="border p-2">{o.totalAmount.toLocaleString()}₫</td>

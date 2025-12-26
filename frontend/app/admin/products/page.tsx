@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import SearchInput from "@/app/admin/components/Search";
 import {
   Table,
   Button,
@@ -37,8 +38,21 @@ export default function ProductsPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageFileList, setImageFileList] = useState<UploadFile[]>([]);
   const [removeImage, setRemoveImage] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const [form] = Form.useForm();
+
+  function removeVietnameseTones(str: string) {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+  }
+
+  const filteredProducts = products.filter((p) =>
+    removeVietnameseTones(p.name).toLowerCase().includes(searchText)
+  );
 
   // =========================
   // Fetch data
@@ -210,7 +224,14 @@ export default function ProductsPage() {
         </Button>
       </Space>
 
-      <Table rowKey="id" dataSource={products} columns={columns} loading={loading} bordered />
+      <Space className="mb-4" direction="vertical" style={{ width: "100%" }}>
+        <SearchInput
+          placeholder="Tìm kiếm sản phẩm..."
+          onSearch={(val) => setSearchText(val)}
+        />
+      </Space>
+
+      <Table rowKey="id" dataSource={filteredProducts} columns={columns} loading={loading} bordered />
 
       <Modal
         title={editingProduct ? "Sửa sản phẩm" : "Thêm sản phẩm"}

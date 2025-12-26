@@ -10,6 +10,7 @@ import {
   Category,
   CategoryData,
 } from "@/services/category-services";
+import SearchInput from "@/app/admin/components/Search";
 import { toast } from "react-toastify";
 
 export default function CategoriesPage() {
@@ -19,8 +20,20 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(
     null
   );
-
+  const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
+
+  function removeVietnameseTones(str: string) {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D");
+  }
+
+  const filteredCategories = categories.filter((cat) =>
+    removeVietnameseTones(cat.name).toLowerCase().includes(searchText)
+  );
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -116,9 +129,13 @@ export default function CategoriesPage() {
       <Button type="primary" className="mb-4" onClick={handleAdd}>
         Thêm danh mục
       </Button>
+      <SearchInput
+        placeholder="Tìm kiếm danh mục..."
+        onSearch={(val) => setSearchText(val)}
+      />
       <Table
         rowKey="id"
-        dataSource={categories}
+        dataSource={filteredCategories}
         columns={columns}
         loading={loading}
         bordered

@@ -18,6 +18,14 @@ interface User {
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
+    const [searchText, setSearchText] = useState("");
+
+    const filteredUsers = users.filter(user =>
+        user.username.toLowerCase().includes(searchText.toLowerCase()) ||
+        user.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchText.toLowerCase()) ||
+        user.phone.toLowerCase().includes(searchText.toLowerCase())
+    );
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -81,9 +89,16 @@ export default function UsersPage() {
     return (
         <div>
             <h1 className="text-2xl font-bold mb-4">Users Management</h1>
+            <input
+                type="text"
+                placeholder="Tìm kiếm user..."
+                className="border rounded px-2 py-1 mb-4 w-full"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+            />
             <Table
                 rowKey="id"
-                dataSource={users}
+                dataSource={filteredUsers}
                 columns={columns}
                 loading={loading}
                 bordered

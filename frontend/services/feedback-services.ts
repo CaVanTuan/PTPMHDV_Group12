@@ -6,12 +6,13 @@ import { toast } from "react-toastify";
  * (GET /api/Feedback/product/{productId})
  */
 export interface FeedbackData {
-  id?: number;          // id feedback
-  productId: number;    // id sản phẩm
-  content: string;      // nội dung đánh giá
-  rating: number;       // số sao (1 - 5)
-  userId?: number;      // id user (backend tự gán)
-  userName?: string;    // tên user (backend tự gán)
+  id: number;
+  content: string;
+  rating: number;
+  productId: number;
+  createdAt: string;
+  updatedAt?: string;
+  user?: { id: number; fullName: string };
 }
 
 /**

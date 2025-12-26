@@ -40,6 +40,11 @@ export default function AdminPromotionsPage() {
     const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
+    // lọc
+    const [filterStatus, setFilterStatus] = useState<"all" | "active" | "expired">("all");
+    const [filterApplyType, setFilterApplyType] = useState<PromotionApplyType | "all">("all");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc"); // theo startDate
+
     const fetchPromotions = async () => {
         setLoading(true);
         const res = await getAllPromotionsAdmin();
@@ -130,6 +135,24 @@ export default function AdminPromotionsPage() {
         setSelectedCategories(promo.categoryIds || []);
         setSelectedUsers(promo.userIds || []);
     };
+
+    const filteredPromotions = promotions
+        .filter(p => {
+            // lọc trạng thái
+            if (filterStatus === "active") return p.status === 0;
+            if (filterStatus === "expired") return p.status !== 0;
+            return true;
+        })
+        .filter(p => {
+            // lọc loại áp dụng
+            if (filterApplyType === "all") return true;
+            return p.applyType === filterApplyType;
+        })
+        .sort((a, b) => {
+            const dateA = new Date(a.startDate).getTime();
+            const dateB = new Date(b.startDate).getTime();
+            return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+        });
 
     // Render checklist dựa theo ApplyType
     const renderSelectionList = () => {
@@ -286,6 +309,51 @@ export default function AdminPromotionsPage() {
                     </div>
                 </div>
             </div>
+            {/* Filter & Sort */}
+            <div className="flex gap-4 mb-4">
+                <div>
+                    <label>Trạng thái:</label>
+                    <select
+                        className="border p-1"
+                        value={filterStatus}
+                        onChange={e => setFilterStatus(e.target.value as any)}
+                    >
+                        <option value="all">Tất cả</option>
+                        <option value="active">Active</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Loại áp dụng:</label>
+                    <select
+                        className="border p-1"
+                        value={filterApplyType}
+                        onChange={e => {
+                            const val = e.target.value;
+                            setFilterApplyType(val === "all" ? "all" : Number(val));
+                        }}
+                    >
+                        <option value="all">Tất cả</option>
+                        <option value={PromotionApplyType.General}>General</option>
+                        <option value={PromotionApplyType.Product}>Product</option>
+                        <option value={PromotionApplyType.Category}>Category</option>
+                        <option value={PromotionApplyType.User}>User</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Sắp xếp:</label>
+                    <select
+                        className="border p-1"
+                        value={sortOrder}
+                        onChange={e => setSortOrder(e.target.value as "asc" | "desc")}
+                    >
+                        <option value="asc">Tăng dần</option>
+                        <option value="desc">Giảm dần</option>
+                    </select>
+                </div>
+            </div>
 
             {/* List Promotion */}
             {loading ? (
@@ -304,7 +372,7 @@ export default function AdminPromotionsPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {promotions.map(promo => (
+                        {filteredPromotions.map(promo => (
                             <tr key={promo.promotionId}>
                                 <td className="border p-2">{promo.code}</td>
                                 <td className="border p-2">{promo.discountPercent}%</td>

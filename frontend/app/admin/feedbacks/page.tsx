@@ -44,6 +44,19 @@ export default function AdminFeedbacksPage() {
   const [rating, setRating] = useState(5);
   const [productId, setProductId] = useState<number | "">("");
 
+  //lọc
+  const [filterProduct, setFilterProduct] = useState<number | "all">("all");
+  const [filterRating, setFilterRating] = useState<number | "all">("all");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const filteredFeedbacks = feedbacks
+    .filter(fb => filterProduct === "all" || fb.productId === filterProduct)
+    .filter(fb => filterRating === "all" || fb.rating === filterRating)
+    .sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
   const fetchFeedbacks = async () => {
     setLoading(true);
     try {
@@ -123,7 +136,7 @@ export default function AdminFeedbacksPage() {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Nội dung feedback"
             />
-            
+
             {/* Star rating */}
             <StarRating rating={rating} setRating={setRating} />
 
@@ -160,6 +173,48 @@ export default function AdminFeedbacksPage() {
         </div>
       )}
 
+      {/* Filter */}
+      <div className="flex gap-4 mb-4">
+        <div>
+          <label>Sản phẩm:</label>
+          <select
+            className="border p-1"
+            value={filterProduct}
+            onChange={e => setFilterProduct(e.target.value === "all" ? "all" : parseInt(e.target.value))}
+          >
+            <option value="all">Tất cả</option>
+            {products.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Số sao:</label>
+          <select
+            className="border p-1"
+            value={filterRating}
+            onChange={e => setFilterRating(e.target.value === "all" ? "all" : parseInt(e.target.value))}
+          >
+            <option value="all">Tất cả</option>
+            {[1, 2, 3, 4, 5].map(n => (
+              <option key={n} value={n}>{n} sao</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Sắp xếp theo ngày:</label>
+          <select
+            className="border p-1"
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value as "newest" | "oldest")}
+          >
+            <option value="newest">Mới nhất</option>
+            <option value="oldest">Cũ nhất</option>
+          </select>
+        </div>
+      </div>
+
       {/* Danh sách feedback */}
       {loading ? (
         <p>Đang tải...</p>
@@ -167,34 +222,36 @@ export default function AdminFeedbacksPage() {
         <table className="w-full border">
           <thead className="bg-gray-100">
             <tr>
+              <th className="border p-2">Người dùng</th>
               <th className="border p-2">Sản phẩm</th>
               <th className="border p-2">Nội dung đánh giá</th>
               <th className="border p-2">Số sao</th>
+              <th className="border p-2">Ngày tạo</th>
+              <th className="border p-2">Ngày cập nhật</th>
               <th className="border p-2">Hành động</th>
             </tr>
           </thead>
           <tbody>
-            {feedbacks.map((fb) => (
+            {filteredFeedbacks.map((fb) => (
               <tr key={fb.id}>
-                <td className="border p-2">
-                  {products.find((p) => p.id === fb.productId)?.name ?? "-"}
-                </td>
+                <td className="border p-2">{fb.user?.fullName ?? "-"}</td>
+                <td className="border p-2">{products.find(p => p.id === fb.productId)?.name ?? "-"}</td>
                 <td className="border p-2">{fb.content}</td>
-                <td className="border p-2">
-                  <StarRating rating={fb.rating} setRating={() => {}} />
-                </td>
+                <td className="border p-2">{fb.rating}</td>
+                <td className="border p-2">{new Date(fb.createdAt).toLocaleString()}</td>
+                <td className="border p-2">{fb.updatedAt ? new Date(fb.updatedAt).toLocaleString() : "-"}</td>
                 <td className="border p-2 flex gap-2">
                   <button
                     className="bg-yellow-500 text-white px-2 py-1 rounded"
                     onClick={() => handleEdit(fb)}
                   >
-                    Edit
+                    Sửa
                   </button>
                   <button
                     className="bg-red-500 text-white px-2 py-1 rounded"
                     onClick={() => handleDelete(fb.id!)}
                   >
-                    Delete
+                    Xóa
                   </button>
                 </td>
               </tr>
