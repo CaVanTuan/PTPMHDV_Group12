@@ -56,10 +56,10 @@ export const createFeedback = async (data: {
 }) => {
   try {
     const res = await api.post("/api/Feedback", data);
-    toast.success("Tạo feedback thành công");
+    toast.success("Đánh giá thành công");
     return res.data;
   } catch (error: any) {
-    toast.error(error.response?.data?.message || "Tạo feedback thất bại");
+    toast.error(error.response?.data?.message || "Đánh giá thất bại");
     throw error;
   }
 };

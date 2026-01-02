@@ -166,7 +166,7 @@ namespace Controllers
 
             return Ok(new
             {
-                message = "Tạo payment thành công!",
+                message = "Thanh toán thành công!",
                 payment,
                 totalAmount,
                 finalAmount,

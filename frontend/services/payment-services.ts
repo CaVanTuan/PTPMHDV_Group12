@@ -65,7 +65,7 @@ export const createPayment = async (data: {
 }) => {
   try {
     const res = await api.post("/api/Payment/create", data);
-    toast.success(res.data.message || "Tạo payment thành công!");
+    toast.success(res.data.message || "Thanh toán thành công!");
     return res.data;
   } catch (error: any) {
     toast.error(error.response?.data?.message || "Tạo payment thất bại");
