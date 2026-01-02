@@ -28,9 +28,10 @@ public class AuthController : Controller
     {
         var user = await _context.users.FirstOrDefaultAsync(u => u.Username == request.Username);
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
-            return Unauthorized(new { message = "Sai tài khoản hoặc mật khẩu" });
-
+        if (user == null)
+            return Unauthorized(new { message = "Tài khoản không tồn tại!" });
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+            return Unauthorized(new { message = "Sai mật khẩu" });
         // Nếu đã gửi email nhưng hết hạn 24h
         if (!user.IsVerified &&
             user.EmailVerificationSentAt.HasValue &&
