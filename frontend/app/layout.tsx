@@ -2,6 +2,7 @@
 
 import "./globals.css";
 import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { usePathname } from "next/navigation";
@@ -10,7 +11,7 @@ import api from "@/services/api";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showNavBar = !pathname.startsWith("/admin");
+  const showLayout = !pathname.startsWith("/admin");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -26,9 +27,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="vi">
-      <body className="relative font-sans">
-        {showNavBar && <NavBar />}
-        {children}
+      <body className="relative font-sans flex flex-col min-h-screen">
+        {showLayout && <NavBar />}
+
+        {/* Nội dung chính */}
+        <main className="flex-grow">
+          {children}
+        </main>
+
+        {/* Footer */}
+        {showLayout && <Footer />}
+
         <ToastContainer
           position="top-right"
           autoClose={3000}

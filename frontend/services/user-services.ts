@@ -47,7 +47,7 @@ export const getCurrentUser = async (): Promise<User> => {
 export const createUser = async (data: any): Promise<User> => {
   try {
     const res = await api.post("/api/users/User", data);
-    toast.success("Tạo user thành công");
+    toast.success("Tạo tài khoản thành công");
     return res.data;
   } catch (error) {
     throw error;
@@ -83,7 +83,7 @@ export const updatePassword = async (id: number, oldPassword: string, newPasswor
 export const deleteUser = async (id: number): Promise<void> => {
   try {
     await api.delete(`/api/users/${id}`);
-    toast.success("Xóa user thành công");
+    toast.success("Xóa tài khoản người dùng thành công");
   } catch (error) {
     throw error;
   }

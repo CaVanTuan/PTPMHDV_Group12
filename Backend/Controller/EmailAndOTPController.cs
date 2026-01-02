@@ -49,12 +49,12 @@ namespace Controllers
                 using var smtp = new SmtpClient("smtp.gmail.com")
                 {
                     Port = 587,
-                    Credentials = new NetworkCredential("tuankiz1412@gmail.com", "ywjo fdkg oyvs luik"),
+                    Credentials = new NetworkCredential("sniper021003@gmail.com", "iwoj flbu lsjf kpnw"),
                     EnableSsl = true
                 };
                 var mail = new MailMessage
                 {
-                    From = new MailAddress("tuankiz1412@gmail.com"),
+                    From = new MailAddress("sniper021003@gmail.com"),
                     Subject = "OTP xác thực",
                     Body = $"Mã OTP của bạn là: {otp}",
                     IsBodyHtml = false
@@ -144,14 +144,14 @@ namespace Controllers
                 using var smtp = new SmtpClient("smtp.gmail.com")
                 {
                     Port = 587,
-                    Credentials = new NetworkCredential("tuankiz1412@gmail.com", "ywjo fdkg oyvs luik"),
+                    Credentials = new NetworkCredential("sniper021003@gmail.com", "iwoj flbu lsjf kpnw"),
                     EnableSsl = true
                 };
 
                 var verifyLink = $"http://localhost:3000/verify-email?token={token}&email={user.Email}";
                 var mail = new MailMessage
                 {
-                    From = new MailAddress("tuankiz1412@gmail.com"),
+                    From = new MailAddress("sniper021003@gmail.com"),
                     Subject = "Xác thực tài khoản",
                     Body = $"Nhấn để xác thực tài khoản: {verifyLink}",
                     IsBodyHtml = false
