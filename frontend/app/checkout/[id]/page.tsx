@@ -171,6 +171,13 @@ export default function CheckoutPage() {
     if (!order) return;
     if (!address) return toast.error("Vui lòng nhập địa chỉ");
 
+    if (paymentMethod === "VNPAY" || paymentMethod === "PAYPAL") {
+      toast.info(
+        `Thanh toán bằng ${paymentMethod} đang được cập nhật, vui lòng chọn COD`
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       const payload: any = {
