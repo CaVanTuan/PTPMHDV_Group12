@@ -52,7 +52,7 @@ function OtpInput({
     }, [timerKey, timerDuration]); // mỗi lần resend hoặc timerDuration thay đổi
 
     useEffect(() => {
-        // Nếu toàn bộ otp rỗng → focus lại ô đầu
+        // Nếu toàn bộ otp rỗng, focus lại ô đầu
         if (otp.every(d => d === "")) {
             setTimeout(() => {
                 inputsRef.current[0]?.focus();
@@ -117,7 +117,7 @@ if (otp.every(d => d !== "")) onVerify(otp.join(""));
     };
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center font-[Times_New_Roman]">
             <div className="flex gap-2">
                 {otp.map((digit, index) => (
                     <input
@@ -195,7 +195,7 @@ const router = useRouter();
         } catch (err) {
             toast.error("OTP không đúng, vui lòng thử lại 😥");
 
-            // ✅ RESET OTP INPUT
+            // RESET OTP INPUT
             setOtp(Array(OTP_LENGTH).fill(""));
         } finally {
             setLoading(false);
@@ -228,7 +228,7 @@ const router = useRouter();
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 font-[Times_New_Roman]">
             <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-4 text-center">
                     {step === "email"

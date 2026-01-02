@@ -99,6 +99,13 @@ export default function CategoryPage() {
   // --- Mua ngay (Order trực tiếp bằng ProductId) ---
   const handleBuyNow = async (productId: number) => {
     try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.warning("Cần đăng nhập để mua hàng");
+        router.push("/login");
+        return;
+      }
       const order = await orderByProduct(productId, 1);
 
       toast.success("Mua ngay thành công 🎉");

@@ -35,7 +35,7 @@ namespace Controllers
             // Kiểm tra xem Username đã tồn tại chưa
             if (await _context.users.AnyAsync(
                 u => u.Username == request.Username))
-                return BadRequest(new { message = "Username đã tồn tại." });
+                return BadRequest(new { message = "Tài khoản đã tồn tại." });
             if (await _context.users.AnyAsync(
                 u => u.Phone == request.Phone))
                 return BadRequest(new { message = "SDT đã tồn tại." });

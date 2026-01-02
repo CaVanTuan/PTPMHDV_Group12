@@ -206,7 +206,7 @@ namespace Controllers
         // ==================================================
         // 3. CANCEL PAYMENT
         // ==================================================
-        [HttpPost("cancel/{paymentId}")]
+        [HttpPut("cancel/{paymentId}")]
         [Authorize]
         public async Task<IActionResult> CancelPayment(int paymentId)
         {
@@ -237,9 +237,9 @@ namespace Controllers
         // ==================================================
         [HttpPut("update-status/{id}")]
         public async Task<IActionResult> UpdateStatus(
-    int id,
-    [FromBody] UpdatePaymentStatusDto dto
-)
+            int id,
+            [FromBody] UpdatePaymentStatusDto dto
+        )
         {
             var payment = await _context.payments.FindAsync(id);
             if (payment == null)

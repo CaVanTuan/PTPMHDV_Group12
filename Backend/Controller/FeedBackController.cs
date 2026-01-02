@@ -26,20 +26,25 @@ namespace Controllers
             return (userId, role);
         }
 
-        // GET: api/Feedback
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
-            var (userId, role) = GetUserInfo();
-
-            IQueryable<Feedback> query = _context.Feedbacks
+            var feedbacks = await _context.Feedbacks
                 .Include(f => f.User)
-                .Include(f => f.Product);
+                .Include(f => f.Product)
+                .Select(f => new
+                {
+                    f.Id,
+                    f.Content,
+                    f.Rating,
+                    f.ProductId,
+                    f.UserId,
+                    UserName = f.User.FullName,
+                    f.CreatedAt
+                })
+                .ToListAsync();
 
-            if (role != "Admin")
-                query = query.Where(f => f.UserId == userId);
-
-            var feedbacks = await query.ToListAsync();
             return Ok(feedbacks);
         }
 

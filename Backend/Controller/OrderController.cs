@@ -212,7 +212,7 @@ namespace Controllers
 
                 return Ok(new
                 {
-                    message = "Thanh toán sản phẩm thành công!",
+                    message = "Tạo đơn mua ngay thành công!",
                     order = createdOrder
                 });
             }

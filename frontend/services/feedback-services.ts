@@ -10,9 +10,10 @@ export interface FeedbackData {
   content: string;
   rating: number;
   productId: number;
-  createdAt: string;
+  userId: number;
+  userName: string;
+  createdAt?: string;
   updatedAt?: string;
-  user?: { id: number; fullName: string };
 }
 
 /**

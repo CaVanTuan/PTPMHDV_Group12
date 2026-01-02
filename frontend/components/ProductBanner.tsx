@@ -176,30 +176,40 @@ export default function ProductBanner() {
                   transition={{ duration: 0.3 }}
                   className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col h-full"
                 >
-                  <Link href={`/product/${product.id}`} className="block">
+                  <Link href={`/product/${product.id}`} className="block group">
                     <img
                       src={product.imageUrl || "/images/default.jpg"}
                       alt={product.name}
-                      className="w-full h-56 object-cover hover:scale-105 transition-transform duration-500"
+                      className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                  </Link>
 
-                  <div className="p-5 flex flex-col flex-1">
-                    <h3 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2">{product.name}</h3>
-                    <p className="text-gray-500 text-sm mb-3 line-clamp-3">{product.description || "Không có mô tả."}</p>
-                    <div className="mt-auto">
-                      <p className="text-xl font-bold text-gray-800 mb-3">
-                        {hasDiscount ? (
-                          <>
-                            <span className="line-through text-gray-400 mr-2">{product.price.toLocaleString()}₫</span>
-                            <span className="text-red-500">{discountedPrice.toLocaleString()}₫</span>
-                          </>
-                        ) : (
-                          <span>{product.price.toLocaleString()}₫</span>
-                        )}
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-500 transition">
+                        {product.name}
+                      </h3>
+
+                      <p className="text-gray-500 text-sm mb-3 line-clamp-3">
+                        {product.description || "Không có mô tả."}
                       </p>
+
+                      <div className="mt-auto">
+                        <p className="text-xl font-bold text-gray-800 mb-3">
+                          {hasDiscount ? (
+                            <>
+                              <span className="line-through text-gray-400 mr-2">
+                                {product.price.toLocaleString()}₫
+                              </span>
+                              <span className="text-red-500">
+                                {discountedPrice.toLocaleString()}₫
+                              </span>
+                            </>
+                          ) : (
+                            <span>{product.price.toLocaleString()}₫</span>
+                          )}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="px-5 pb-5 mt-auto">
                     <button

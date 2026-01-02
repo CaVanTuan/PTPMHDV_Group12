@@ -65,7 +65,6 @@ export const sendVerificationEmail = async (email: string) => {
     const res = await api.post("/api/EmailAndOTP/send-verification-email", {
       Email: email,
     });
-    toast.success(res.data.message || "Email xác thực đã được gửi 📧");
     return res.data;
   } catch (error: any) {
     toast.error(error.response?.data || "Gửi email xác thực thất bại ❌");

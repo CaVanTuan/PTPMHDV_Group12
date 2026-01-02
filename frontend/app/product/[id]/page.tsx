@@ -1,5 +1,6 @@
 "use client";
-
+import { orderByProduct } from "@/services/order-services";
+import { FaMoneyBillWave } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getById, getByCategoryId, Product } from "@/services/product-services";
@@ -76,6 +77,34 @@ export default function ProductPage({ currentUserId, isAdmin }: { currentUserId:
     }
   };
 
+  const handleBuyNow = async () => {
+    if (!product) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.warning("Cần đăng nhập để mua hàng");
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const res = await orderByProduct(product.id, 1);
+
+      toast.success("Mua ngay thành công 🎉");
+      router.push(`/checkout/${res.orderId}`);
+    } catch (err: any) {
+      console.error(err);
+
+      if (err.response?.status === 401) {
+        toast.warning("Phiên đăng nhập hết hạn, đăng nhập lại");
+        router.push("/login");
+        return;
+      }
+
+      toast.error(err.response?.data?.message || "Mua ngay thất bại");
+    }
+  };
+
   if (loading) return <p className="text-center mt-10">Đang tải sản phẩm...</p>;
   if (!product) return <p className="text-center mt-10 text-red-500">Sản phẩm không tồn tại 😢</p>;
 
@@ -126,6 +155,13 @@ export default function ProductPage({ currentUserId, isAdmin }: { currentUserId:
                 <FaShoppingCart />
               </span>
             </button>
+            <button
+              onClick={handleBuyNow}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold"
+            >
+              <FaMoneyBillWave />
+              Mua ngay
+            </button>
           </div>
         </div>
 
@@ -171,7 +207,7 @@ export default function ProductPage({ currentUserId, isAdmin }: { currentUserId:
 
         {/* Feedback */}
         <div className="mt-12">
-          <Feedback productId={product.id} currentUserId={currentUserId} isAdmin={isAdmin} />
+          <Feedback productId={product.id} />
         </div>
       </div>
     </div>

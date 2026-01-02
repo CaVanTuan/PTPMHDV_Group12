@@ -1,4 +1,5 @@
 "use client";
+
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import { ToastContainer } from "react-toastify";
@@ -24,20 +25,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   return (
-    <html lang="en">
-      <body className="relative">
+    <html lang="vi">
+      <body className="relative font-sans">
         {showNavBar && <NavBar />}
         {children}
         <ToastContainer
           position="top-right"
           autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
           style={{ top: "80px" }}
         />
       </body>

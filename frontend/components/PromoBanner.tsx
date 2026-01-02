@@ -73,7 +73,7 @@ export default function PromoList() {
     return <p className="text-center py-4 text-gray-500">Không có mã giảm giá nào 😢</p>;
 
   return (
-    <div className="flex gap-4 p-4 overflow-x-auto">
+    <div className="flex gap-4 p-4 overflow-x-auto font-[Times_New_Roman]">
       {promos.map(promo => (
         <div
           key={promo.promotionId}

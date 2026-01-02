@@ -50,7 +50,7 @@ export default function RegisterPage() {
 
       try {
         await sendVerificationEmail(form.email);
-        toast.success("Đăng ký thành công 🎉. Vui lòng kiểm tra email để xác thực!");
+        toast.success("Đăng ký thành công 🎉. Vui lòng xác thực email trước 24 tiếng sau khi đăng ký tài khoản!");
         router.push("/login");
       } catch (emailErr: any) {
         toast.error(emailErr.response?.data?.message || "Gửi email thất bại!");
